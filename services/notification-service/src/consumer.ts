@@ -1,6 +1,7 @@
 import amqplib from "amqplib";
 import { db } from "./db";
 import { notifications } from "./db/schema";
+import { wsClients } from "./index";
 
 const RABBITMQ_URL =
   process.env.RABBITMQ_URL || "amqp://guest:guest@localhost:5672";
@@ -42,6 +43,19 @@ export async function startConsumer() {
             });
 
             console.log(`Notification recorded for order ${orderId}`);
+
+            const wsMessage = JSON.stringify({
+              event: "order.placed",
+              data: { orderId, customerName, customerEmail, lensName },
+              timestamp: new Date().toISOString(),
+            });
+            for (const client of wsClients) {
+              try {
+                client.send(wsMessage);
+              } catch (err) {
+                wsClients.delete(client);
+              }
+            }
           }
 
           channel.ack(msg);
