@@ -1,11 +1,17 @@
 import { Elysia } from "elysia";
 import { cors } from "@elysiajs/cors";
+import { swagger } from "@elysiajs/swagger";
 import { db } from "./db";
 import { lenses } from "./db/schema";
 import { eq } from "drizzle-orm";
 
 const app = new Elysia()
   .use(cors())
+  .use(swagger({
+    documentation: {
+      info: { title: "Catalog Service API", version: "1.0.0", description: "API for managing lens catalog" },
+    },
+  }))
   .get("/api/lenses", async () => {
     return db.select().from(lenses);
   })
