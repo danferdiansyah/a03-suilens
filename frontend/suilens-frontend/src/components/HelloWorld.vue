@@ -46,9 +46,43 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, onMounted, onUnmounted } from "vue";
 
 const notifications = ref([]);
+let ws = null;
+
+const WS_URL =
+  (import.meta.env.VITE_NOTIFICATION_WS || "ws://localhost:3003") + "/ws";
+
+function connectWebSocket() {
+  ws = new WebSocket(WS_URL);
+
+  ws.onmessage = (event) => {
+    try {
+      const message = JSON.parse(event.data);
+      notifications.value.unshift(message);
+    } catch (e) {
+      console.error("Failed to parse WS message:", e);
+    }
+  };
+
+  ws.onclose = () => {
+    setTimeout(connectWebSocket, 3000);
+  };
+
+  ws.onerror = (err) => {
+    console.error("WebSocket error:", err);
+    ws.close();
+  };
+}
+
+onMounted(() => {
+  connectWebSocket();
+});
+
+onUnmounted(() => {
+  if (ws) ws.close();
+});
 
 function formatTime(timestamp) {
   const date = new Date(timestamp);
