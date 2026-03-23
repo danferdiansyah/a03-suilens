@@ -1,1 +1,11 @@
+# Claude tools
 .claude
+CLAUDE.md
+
+# Node modules
+node_modules
+
+# Bun modules
+.bun
+
+.DS_Store
